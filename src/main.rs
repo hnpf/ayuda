@@ -78,7 +78,7 @@ fn main() {
             println!("--- command oracle ---");
 
             match oracle::fetch(cmd) {
-                Ok(Resp) => println!("{}", resp),
+                Ok(Resp) => println!("{}", Resp),
                 Err(e) => println!("oracle is silent (network error): {}", e),
             }
         }
