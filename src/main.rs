@@ -4,7 +4,7 @@ mod personality;
 mod db;
 mod teleport;
 mod history;
-
+mod oracle;
 #[cxx::bridge]
 mod ffi {
     unsafe extern "C++" {
@@ -31,8 +31,9 @@ enum Commands {
         /// expression to evaluate
         expr: String,
     },
-    /// the command oracle
-    With {
+    /// the command oracle - finally oracle i was so cfused
+    #[command(name = "?")]
+    Oracle {
         /// command to explain or fetch cheatsheet for
         cmd: String,
     },
@@ -59,7 +60,7 @@ fn main() {
             let res = ffi::eval(&clean_expr);
             personality::show_result(res);
         }
-        Some(Commands::With { cmd }) => {
+        Some(Commands::Oracle { cmd }) => {
             if cmd.contains("rm -rf /") {
                 println!("!! danger: user attempted self-destruction.");
                 for i in 1..=3 {
@@ -75,8 +76,11 @@ fn main() {
                 println!("ok, don't do that again :).");
             }
             println!("--- command oracle ---");
-            println!("looking up: {}", cmd);
-            println!("(this will eventually query cheat.sh, for now just use google lol)");
+
+            match oracle::fetch(cmd) {
+                Ok(Resp) => println!("{}", resp),
+                Err(e) => println!("oracle is silent (network error): {}", e),
+            }
         }
 
         Some(Commands::Go { dest }) => {
