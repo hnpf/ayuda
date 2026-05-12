@@ -1,8 +1,16 @@
 #!/bin/bash
+# god forbid the installer 
 
 # helpfully failing if things are missing
 command -v cargo >/dev/null 2>&1 || { echo >&2 "cargo not found. install rust first. or dont, i'm just a script."; exit 1; }
 command -v g++ >/dev/null 2>&1 || { echo >&2 "g++ not found. need it for the c++ math bridge."; exit 1; }
+
+echo "this script will automatically install ayuda."
+for i in {5..1}; do
+    echo -ne "starting in $i seconds... (ctrl+c to cancel)\r"
+    sleep 1
+done
+echo -e "\n--- continuing install process! ---"
 
 TMP_DIR=$(mktemp -d)
 echo "--- cloning to $TMP_DIR ---"
