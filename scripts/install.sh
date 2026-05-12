@@ -10,7 +10,9 @@ for i in {5..1}; do
     echo -ne "starting in $i seconds... (ctrl+c to cancel)\r"
     sleep 1
 done
-echo -e "\n--- continuing install process! ---"
+
+echo -e "\n--- let's keep going then, shall we? ---"
+sleep 1
 
 TMP_DIR=$(mktemp -d)
 echo "--- cloning to $TMP_DIR ---"
@@ -34,6 +36,8 @@ ayuda() {
         else
             echo "$target"
         fi
+    elif [[ "$1" == "?" ]]; then
+        command ayuda "$@"
     else
         command ayuda "$@"
     fi
