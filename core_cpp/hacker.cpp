@@ -36,9 +36,12 @@ void breach(rust::Str target) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    mvprintw(row / 2 + 4, (col - 15) / 2, "access failed.. ");
+    mvprintw(row / 2 + 4, (col - 50) / 2, "!! service denied by https://www.nasa.gov/ !!");
+    mvprintw(row / 2 + 5, (col - 80) / 2, "REASON: you were denied of service by nasa because you werent");
+    mvprintw(row / 2 + 6, (col - 80) / 2, "using a vpn proxy tunnel with opsec enabled, dont try this again.");
     refresh();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     endwin();
-}
+    }
+
