@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 mod personality;
 mod db;
 mod teleport;
+mod history;
 
 #[cxx::bridge]
 mod ffi {
@@ -53,29 +54,37 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Calc { expr }) => {
-            let res = ffi::eval(expr);
+            // handle people using 'x' for '*'
+            let clean_expr = expr.replace('x', "*");
+            let res = ffi::eval(&clean_expr);
             personality::show_result(res);
         }
         Some(Commands::With { cmd }) => {
             if cmd.contains("rm -rf /") {
-                println!("you really just tried that?");
+                println!("!! danger: user attempted self-destruction.");
                 for i in 1..=3 {
-                    println!("type 'I am a silly goose' (attempt {}/3):", i);
+                    println!("--- validation required (attempt {}/3) ---", i);
+                    println!("type 'i am cat' to confirm you understand the consequences:");
                     let mut input = String::new();
-                    std::io::stdin().read_line(&mut input).unwrap();
-                    if input.trim() != "I am a silly goose" {
-                        println!("nope. try again.");
+                    std::io::stdin().read_line(&mut input).expect("stdin fail");
+                    if input.trim() != "i am cat" {
+                        println!("validation failed. exit.");
                         std::process::exit(1);
                     }
                 }
-                println!("yep. don't do it again.");
+                println!("ok, don't do that again :).");
             }
-            println!("oracle: looking up {} (not implemented yet... go to cheat.sh, LMFAO)", cmd);
+            println!("--- command oracle ---");
+            println!("looking up: {}", cmd);
+            println!("(this will eventually query cheat.sh, for now just use google lol)");
         }
+
         Some(Commands::Go { dest }) => {
             match teleport::resolve(&conn, dest) {
                 Ok(Some(path)) => {
-                    println!("{}", path.display());
+                    let path_str = path.to_string_lossy();
+                    let _ = history::record(&conn, &path_str);
+                    println!("{}", path_str);
                 }
                 Ok(None) => {
                     eprintln!("nowhere found for {}", dest);
