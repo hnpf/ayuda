@@ -2,7 +2,7 @@ pub fn show_result(val: f64) {
     if val.fract() == 0.0 && val >= 0.0 && val < 10.0 {
         print_ascii(val as u8);
     } else {
-        println!("= {}", val);
+        println!("> result: {}", val);
     }
 }
 
@@ -18,7 +18,8 @@ fn print_ascii(n: u8) {
         7 => " ______\n|____  |\n    / / \n   / /  \n  /_/   ",
         8 => "  ___  \n / _ \\ \n| (_) |\n > _ < \n \\___/ ",
         9 => "  ___  \n / _ \\ \n| (_) |\n \\__, |\n   /_/ ",
-        _ => unreachable!(), // or should i say unreadable? idk
+        _ => unreachable!(),
     };
-    println!("result (since you couldn't do it in your head):\n{}", art);
+    println!("--- calculation result ---\n{}\n(lwk insane needing a calculator for this?)", art);
 }
+
