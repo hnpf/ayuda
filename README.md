@@ -14,7 +14,7 @@ AYUDA is a CLI tool for people who spend too much time in the terminal and want 
 ## installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/virex/ayuda/master/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/hnpf/ayuda/master/scripts/install.sh | bash
 ```
 
 ## dev
