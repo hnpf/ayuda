@@ -29,5 +29,5 @@ build:
 cargo build
 ```
 
----
-*tired IT major energy.*
+## license
+gpl-3.0
