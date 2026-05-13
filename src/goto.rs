@@ -1,7 +1,7 @@
 use rusqlite::{Connection, Result};
 use std::path::PathBuf;
 
-pub fn resolve(conn: &Connection, dest: &str) -> Result<Option<PathBuf>> {
+pub fn seek(conn: &Connection, dest: &str) -> Result<Option<PathBuf>> {
     //check aliases
     let mut stmt = conn.prepare("SELECT path FROM aliases WHERE name = ?")?;
     let mut rows = stmt.query([dest])?;
