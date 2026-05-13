@@ -5,6 +5,7 @@ mod db;
 mod teleport;
 mod history;
 mod oracle;
+
 #[cxx::bridge]
 mod ffi {
     unsafe extern "C++" {
@@ -18,7 +19,7 @@ mod ffi {
 
 #[derive(Parser)]
 #[command(name = "ayuda")]
-#[command(about = "because we too lazy to use man and too proud to use a gui ", long_about = None)]
+#[command(about = "because we're too lazy to use man and too proud to use a gui ", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -31,7 +32,7 @@ enum Commands {
         /// expression to evaluate
         expr: String,
     },
-    /// the command oracle - finally oracle i was so cfused
+    /// the command oracle
     #[command(name = "?")]
     Oracle {
         /// command to explain or fetch cheatsheet for
@@ -47,6 +48,7 @@ enum Commands {
         /// cat (default to nasa! because this is totally a tool for hacking nasa!111!!1)
         target: Option<String>,
     },
+    /// advice for the soul (or just rants)
 }
 
 fn main() {
@@ -65,20 +67,20 @@ fn main() {
                 println!("!! danger: user attempted self-destruction.");
                 for i in 1..=3 {
                     println!("--- validation required (attempt {}/3) ---", i);
-                    println!("type 'i am cat' to confirm you understand the consequences:");
+                    println!("type 'I am a silly goose' to confirm you understand the consequences:");
                     let mut input = String::new();
                     std::io::stdin().read_line(&mut input).expect("stdin fail");
-                    if input.trim() != "i am cat" {
+                    if input.trim() != "I am a silly goose" {
                         println!("validation failed. exit.");
                         std::process::exit(1);
                     }
                 }
-                println!("ok, don't do that again :).");
+                println!("ok, your funeral.");
             }
-            println!("--- command oracle ---");
-
+            
+            println!("--- consulting the oracle ---");
             match oracle::fetch(cmd) {
-                Ok(Resp) => println!("{}", Resp),
+                Ok(resp) => println!("{}", resp),
                 Err(e) => println!("oracle is silent (network error): {}", e),
             }
         }
