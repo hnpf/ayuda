@@ -1,13 +1,13 @@
 use clap::{Parser, Subcommand};
 
-mod personality;
+mod sass;
 mod db;
-mod teleport;
+mod goto;
 mod history;
-mod oracle;
+mod ask;
 
 #[cxx::bridge]
-mod ffi {
+mod core {
     unsafe extern "C++" {
         include!("ayuda/core_cpp/include/evaluator.hpp");
         fn eval(expr: &str) -> f64;
@@ -19,7 +19,7 @@ mod ffi {
 
 #[derive(Parser)]
 #[command(name = "ayuda")]
-#[command(about = "because we're too lazy to use man and too proud to use a gui ", long_about = None)]
+#[command(about = "lazy man's cli", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -27,87 +27,175 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// the mathematician, self explanatory 
+    /// math is hard
     Calc {
-        /// expression to evaluate
         expr: String,
     },
-    /// the command oracle
+    /// ask the oracle
     #[command(name = "?")]
-    Oracle {
-        /// command to explain or fetch cheatsheet for
+    Ask {
         cmd: String,
     },
-    /// the teleporter?????
+    /// move around
     Go {
-        /// destination nickname
         dest: String,
     },
-    /// the israeli intelligence module if i'm not misaken
+    /// "hacking"
     Hack {
-        /// cat (default to nasa! because this is totally a tool for hacking nasa!111!!1)
         target: Option<String>,
     },
-    /// advice for the soul (or just rants)
+    /// explain the last command
+    Last,
+    /// configuration
+    Config {
+        /// key to set
+        key: String,
+        /// value to set
+        value: String,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
     let conn = db::init_db().expect("db init fail");
 
+    let sass_level: u8 = db::get_config(&conn, "sass")
+        .unwrap_or_else(|_| "1".to_string())
+        .parse()
+        .unwrap_or(1);
+
     match &cli.command {
         Some(Commands::Calc { expr }) => {
-            // handle people using 'x' for '*'
-            let clean_expr = expr.replace('x', "*");
-            let res = ffi::eval(&clean_expr);
-            personality::show_result(res);
+            let clean = expr.replace('x', "*");
+            let res = core::eval(&clean);
+            sass::out(res, sass_level);
         }
-        Some(Commands::Oracle { cmd }) => {
+        Some(Commands::Ask { cmd }) => {
             if cmd.contains("rm -rf /") {
-                println!("!! danger: user attempted self-destruction.");
+                println!("!! stop. just stop.");
                 for i in 1..=3 {
-                    println!("--- validation required (attempt {}/3) ---", i);
-                    println!("type 'I am a silly goose' to confirm you understand the consequences:");
+                    println!("--- check {}/3 ---", i);
+                    println!("type 'I am a silly goose':");
                     let mut input = String::new();
                     std::io::stdin().read_line(&mut input).expect("stdin fail");
                     if input.trim() != "I am a silly goose" {
-                        println!("validation failed. exit.");
+                        println!("fail. go away.");
                         std::process::exit(1);
                     }
                 }
-                println!("ok, your funeral.");
+                println!("fine.");
             }
             
-            println!("--- consulting the oracle ---");
-            match oracle::fetch(cmd) {
+            println!("--- asking ---");
+            match ask::get(cmd) {
                 Ok(resp) => println!("{}", resp),
-                Err(e) => println!("oracle is silent (network error): {}", e),
+                Err(e) => println!("silent: {}", e),
             }
         }
 
         Some(Commands::Go { dest }) => {
-            match teleport::resolve(&conn, dest) {
+            match goto::seek(&conn, dest) {
                 Ok(Some(path)) => {
-                    let path_str = path.to_string_lossy();
-                    let _ = history::record(&conn, &path_str);
-                    println!("{}", path_str);
+                    let s = path.to_string_lossy();
+                    let _ = history::record(&conn, &s);
+                    println!("{}", s);
                 }
                 Ok(None) => {
-                    eprintln!("nowhere found for {}", dest);
+                    eprintln!("nowhere: {}", dest);
                     std::process::exit(1);
                 }
                 Err(e) => {
-                    eprintln!("teleport fail: {}", e);
+                    eprintln!("fail: {}", e);
                     std::process::exit(1);
                 }
             }
         }
         Some(Commands::Hack { target }) => {
             let t = target.as_deref().unwrap_or("nasa");
-            ffi::breach(t);
+            core::breach(t);
+        }
+        Some(Commands::Last) => {
+            let hist_file = std::env::var("HISTFILE").unwrap_or_else(|_| {
+                let home = std::env::var("HOME").unwrap_or_default();
+                let zsh = format!("{}/.zsh_history", home);
+                if std::path::Path::new(&zsh).exists() {
+                    zsh
+                } else {
+                    format!("{}/.bash_history", home)
+                }
+            });
+
+            match std::fs::read_to_string(&hist_file) {
+                Ok(content) => {
+                    let last = content.lines().last().unwrap_or("").trim();
+                    let cmd = if last.starts_with(':') {
+                        last.split(';').nth(1).unwrap_or(last)
+                    } else {
+                        last
+                    };
+
+                    if cmd.is_empty() {
+                        println!("history is empty. like my soul.");
+                    } else {
+                        println!("last cmd: {}", cmd);
+                        match ask::get(cmd) {
+                            Ok(resp) => println!("{}", resp),
+                            Err(e) => println!("silent: {}", e),
+                        }
+                    }
+                }
+                Err(_) => println!("can't read history. opsec?"),
+            }
+        }
+        Some(Commands::Clean) => {
+            clean::find_bloat();
+        }
+        Some(Commands::Config { key, value }) => {
+            match db::update_config(&conn, key, value) {
+                Ok(_) => println!("ok."),
+                Err(e) => eprintln!("fail: {}", e),
+            }
         }
         None => {
-            println!("ayuda: no args. maybe launch later?");
+            println!("ayuda. try -h.");
+        }
+    }
+}
+             format!("{}/.bash_history", home)
+                }
+            });
+
+            match std::fs::read_to_string(&hist_file) {
+                Ok(content) => {
+                    let last = content.lines().last().unwrap_or("").trim();
+                    // zsh history often has timestamps like ': 1234567890:0;cmd'
+                    let cmd = if last.starts_with(':') {
+                        last.split(';').nth(1).unwrap_or(last)
+                    } else {
+                        last
+                    };
+
+                    if cmd.is_empty() {
+                        println!("history is empty. like my soul.");
+                    } else {
+                        println!("last cmd: {}", cmd);
+                        match ask::get(cmd) {
+                            Ok(resp) => println!("{}", resp),
+                            Err(e) => println!("silent: {}", e),
+                        }
+                    }
+                }
+                Err(_) => println!("can't read history. opsec?"),
+            }
+        }
+        Some(Commands::Config { key, value }) => {
+            match db::update_config(&conn, key, value) {
+                Ok(_) => println!("ok."),
+                Err(e) => eprintln!("fail: {}", e),
+            }
+        }
+        None => {
+            println!("ayuda. try -h.");
         }
     }
 }
