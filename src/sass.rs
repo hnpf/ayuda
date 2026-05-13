@@ -1,8 +1,25 @@
-pub fn show_result(val: f64) {
-    if val.fract() == 0.0 && val >= 0.0 && val < 10.0 {
-        print_ascii(val as u8);
-    } else {
-        println!("> result: {}", val);
+pub fn out(val: f64, sass_level: u8) {
+    match sass_level {
+        0 => println!("result: {}", val),
+        1 => {
+            if val.fract() == 0.0 && val >= 0.0 && val < 10.0 {
+                print_ascii(val as u8);
+                println!("(imagine needing a calculator for this)");
+            } else {
+                println!("res: {}", val);
+                println!("... satisfied?");
+            }
+        }
+        _ => {
+            // chaos / "son what the hell is this"
+            if val > 1000.0 {
+                println!("{}? what are you even building, a rocket? slow down.", val);
+            } else if val < 0.0 {
+                println!("{}... why are we in the negatives? bad day?", val);
+            } else {
+                println!("it's {}. hope that helps, but it probably won't.", val);
+            }
+        }
     }
 }
 
@@ -80,5 +97,5 @@ fn print_ascii(n: u8) {
         ),
         _ => unreachable!(),
     };
-    println!("--- calculation result ---\n{}\n(lwk insane needing a calculator for this?)", art);
+    println!("{}", art);
 }
