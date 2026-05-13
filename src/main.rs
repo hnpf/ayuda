@@ -162,7 +162,7 @@ fn main() {
     }
 }
              format!("{}/.bash_history", home)
-                }
+                
             });
 
             match std::fs::read_to_string(&hist_file) {
