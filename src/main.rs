@@ -5,6 +5,7 @@ mod db;
 mod goto;
 mod history;
 mod ask;
+mod clean;
 
 #[cxx::bridge]
 mod core {
@@ -46,6 +47,8 @@ enum Commands {
     },
     /// explain the last command
     Last,
+    /// find bloat
+    Clean,
     /// configuration
     Config {
         /// key to set
@@ -149,44 +152,6 @@ fn main() {
         }
         Some(Commands::Clean) => {
             clean::find_bloat();
-        }
-        Some(Commands::Config { key, value }) => {
-            match db::update_config(&conn, key, value) {
-                Ok(_) => println!("ok."),
-                Err(e) => eprintln!("fail: {}", e),
-            }
-        }
-        None => {
-            println!("ayuda. try -h.");
-        }
-    }
-}
-             format!("{}/.bash_history", home)
-                
-            });
-
-            match std::fs::read_to_string(&hist_file) {
-                Ok(content) => {
-                    let last = content.lines().last().unwrap_or("").trim();
-                    // zsh history often has timestamps like ': 1234567890:0;cmd'
-                    let cmd = if last.starts_with(':') {
-                        last.split(';').nth(1).unwrap_or(last)
-                    } else {
-                        last
-                    };
-
-                    if cmd.is_empty() {
-                        println!("history is empty. like my soul.");
-                    } else {
-                        println!("last cmd: {}", cmd);
-                        match ask::get(cmd) {
-                            Ok(resp) => println!("{}", resp),
-                            Err(e) => println!("silent: {}", e),
-                        }
-                    }
-                }
-                Err(_) => println!("can't read history. opsec?"),
-            }
         }
         Some(Commands::Config { key, value }) => {
             match db::update_config(&conn, key, value) {
